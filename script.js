@@ -147,4 +147,31 @@ const renderGoods = (arr) => {
   });
 };
 
+const actions = (overlay) => {
+  const buttonAddGood = document.querySelector('.panel__add-goods');
+  const buttonModalClose = document.querySelector('.modal__close');
+  const overlay__modal = document.querySelector('.overlay__modal');
+  
+  // форма открывается при клике на кнопку
+  buttonAddGood.addEventListener('click', () => {
+    overlay.style.display = 'initial';
+  });
+  
+  // форма не закрывается при клике на нее
+  overlay__modal.addEventListener('click', (event) => {
+    event.stopPropagation();
+  });
+  
+  // форма закрывается при клике вне ее
+  overlay.addEventListener('click', () => {
+    overlay.style.display = 'none';
+  });
+  
+  // форма закрывается при клике на крестик
+  buttonModalClose.addEventListener('click', () => {
+    overlay.style.display = 'none';
+  });
+};
+
 renderGoods(goodsArray);
+actions(overlay);
