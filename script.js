@@ -149,27 +149,44 @@ const renderGoods = (arr) => {
 
 const actions = (overlay) => {
   const buttonAddGood = document.querySelector('.panel__add-goods');
-  const buttonModalClose = document.querySelector('.modal__close');
-  const overlay__modal = document.querySelector('.overlay__modal');
+  const table = document.querySelector('.table');
   
   // форма открывается при клике на кнопку
   buttonAddGood.addEventListener('click', () => {
     overlay.style.display = 'initial';
   });
-  
-  // форма не закрывается при клике на нее
-  overlay__modal.addEventListener('click', (event) => {
-    event.stopPropagation();
+
+  // ДЕЛЕГИРОВАНИЕ
+  overlay.addEventListener('click', (e) => {
+    // форма закрывается при клике вне ее или по крестику
+    if (e.target === overlay || e.target.closest('.modal__close')) {
+      overlay.style.display = 'none';
+    }; 
   });
-  
-  // форма закрывается при клике вне ее
-  overlay.addEventListener('click', () => {
-    overlay.style.display = 'none';
-  });
-  
-  // форма закрывается при клике на крестик
-  buttonModalClose.addEventListener('click', () => {
-    overlay.style.display = 'none';
+
+  // ДЕЛЕГИРОВАНИЕ
+  table.addEventListener('click', (e) => {
+    // удаления строки
+    if (e.target.closest('.table__btn_del')) {
+      e.target.closest('tr').remove();
+
+      const tRow = document.querySelectorAll('.table__body > tr');
+      console.log('База данных после удаления строки:');
+      let res = ''
+
+      tRow.forEach((e) => {
+        const rowNum = e.querySelector('td:nth-child(1)').textContent;
+        const rowGood = e.querySelector('.table__cell-id').nextSibling.textContent.trim();
+        const category = e.querySelector('td:nth-child(3)').textContent;
+        const units = e.querySelector('td:nth-child(4)').textContent;
+        const quantity = e.querySelector('td:nth-child(5)').textContent;
+        const price = e.querySelector('td:nth-child(6)').textContent;
+        const priceOverall = e.querySelector('td:nth-child(7)').textContent;
+        res += `\t${rowNum} ${rowGood} ${category} ${units} ${quantity} ${price} ${priceOverall}\n`;
+      });
+      
+      console.log(res);
+    }; 
   });
 };
 
