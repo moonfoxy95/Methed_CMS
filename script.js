@@ -39,31 +39,28 @@ const goodsArray = [
     "category": "cables",
     "discont": false,
     "count": 420,
-    "units": "v",
+    "units": "м",
   }
 ];
 
 
-// №1
 const overlay = document.querySelector('.overlay');
+const modal = document.querySelector('.overlay__modal');
+const form = document.querySelector('.modal__form');
 overlay.classList.remove('active');
 
-// №2 
 const createRow = (obj) => {
   const tableBody = document.querySelector('.table__body');
   const trCounter = tableBody.getElementsByTagName('tr');
 
-
   // создание ряда
   const tr = document.createElement('tr');
-
 
   // создание ячейки №
   const NumberTd = document.createElement('td');
   NumberTd.classList.add('table__cell');
   NumberTd.textContent = trCounter.length + 1;  
   tr.appendChild(NumberTd);
-
 
   // создание ячейки name
   const nameTd = document.createElement('td');
@@ -80,13 +77,11 @@ const createRow = (obj) => {
   // название
   nameSpan.insertAdjacentText('afterend', obj.title);
 
-
   // создание ячейки category
   const categoryTd = document.createElement('td');
   categoryTd.classList.add('table__cell', 'table__cell_left');
   categoryTd.textContent = obj.category;
   tr.append(categoryTd);
-
 
   // создание ячейки units
   const unitsTd = document.createElement('td');
@@ -94,13 +89,11 @@ const createRow = (obj) => {
   unitsTd.textContent = obj.units;
   tr.append(unitsTd);
 
-
   // создание ячейки quantity
   const quantityTd = document.createElement('td');
   quantityTd.classList.add('table__cell');
   quantityTd.textContent = obj.count;
   tr.append(quantityTd);
-
 
   // создание ячейки price
   const priceTd = document.createElement('td');
@@ -108,13 +101,11 @@ const createRow = (obj) => {
   priceTd.textContent = '$' + obj.price;
   tr.append(priceTd);
 
-
   // создание ячейки summary
   const summaryTd = document.createElement('td');
   summaryTd.classList.add('table__cell');
   summaryTd.textContent = '$' + obj.price * obj.count;
   tr.append(summaryTd);
-
 
   // создание ячейки btn-wrapper
   const btnWrapperTd = document.createElement('td');
@@ -136,7 +127,6 @@ const createRow = (obj) => {
 
   btnWrapperTd.append(button1, button2, button3);
 
-
   // добавление всей строки
   tableBody.append(tr);
 };
@@ -147,13 +137,67 @@ const renderGoods = (arr) => {
   });
 };
 
+const EvaluateOrderSum = () => {
+  const orderSum = document.querySelector('.cms__total-price');
+  const table = document.querySelector('.goods__table');
+  let thead = table.querySelectorAll('.table__header-row > th');
+  let tbody = table.querySelectorAll('.table__body > tr');
+  let sumColumn = undefined;
+
+  for (let i = 0; i < thead.length; i++) {
+    console.log()
+    if (thead[i].textContent === 'ИТОГ') {
+      sumColumn = i;
+      break;
+    }
+  }
+
+  const orderSumValue = Array.from(tbody).reduce((acc, value) => {
+    let rowSum = parseFloat(value.children[sumColumn].textContent.slice(1));
+    return acc + rowSum;
+  }, 0);
+
+  orderSum.textContent = `$ ${orderSumValue}`;
+}
+
+//count price $ 900.00
+const evaluateGoodSum = () => {
+  let quantity = form.count.value || 0;
+  let price = form.price.value || 0;
+  form.total.textContent = `$ ${quantity * price}`;
+  
+  console.log(quantity, price);
+}
+
+const addItem = (form, table) => {
+  form.addEventListener('submit', e => {
+    e.preventDefault();
+
+    const formData = new FormData(e.target);
+    const newItem = Object.fromEntries(formData);
+    newItem.id = form.querySelector('.vendor-code__id').textContent;
+    newItem.title = newItem.name;
+
+    table.append(createRow(newItem));
+    goodsArray.push(newItem);
+
+    overlay.style.display = 'none';
+    EvaluateOrderSum();
+  })
+}
+
 const actions = (overlay) => {
   const buttonAddGood = document.querySelector('.panel__add-goods');
   const table = document.querySelector('.table');
   
+  
   // форма открывается при клике на кнопку
   buttonAddGood.addEventListener('click', () => {
+    let vendorCodeId = document.querySelector('.vendor-code__id');
     overlay.style.display = 'initial';
+    // случайный id при открытии формы
+    let randomVendorCodeId = Math.random().toFixed(10).slice(2);
+    vendorCodeId.textContent = randomVendorCodeId;
   });
 
   // ДЕЛЕГИРОВАНИЕ
@@ -161,34 +205,40 @@ const actions = (overlay) => {
     // форма закрывается при клике вне ее или по крестику
     if (e.target === overlay || e.target.closest('.modal__close')) {
       overlay.style.display = 'none';
-    }; 
+    };
   });
+  
+  form.addEventListener('blur', (e) => {
+    if (e.target === form.count || e.target === form.price) {
+      evaluateGoodSum();
+    }
+  }, true);
 
   // ДЕЛЕГИРОВАНИЕ
   table.addEventListener('click', (e) => {
     // удаления строки
     if (e.target.closest('.table__btn_del')) {
       e.target.closest('tr').remove();
-
-      const tRow = document.querySelectorAll('.table__body > tr');
-      console.log('База данных после удаления строки:');
-      let res = ''
-
-      tRow.forEach((e) => {
-        const rowNum = e.querySelector('td:nth-child(1)').textContent;
-        const rowGood = e.querySelector('.table__cell-id').nextSibling.textContent.trim();
-        const category = e.querySelector('td:nth-child(3)').textContent;
-        const units = e.querySelector('td:nth-child(4)').textContent;
-        const quantity = e.querySelector('td:nth-child(5)').textContent;
-        const price = e.querySelector('td:nth-child(6)').textContent;
-        const priceOverall = e.querySelector('td:nth-child(7)').textContent;
-        res += `\t${rowNum} ${rowGood} ${category} ${units} ${quantity} ${price} ${priceOverall}\n`;
-      });
-      
-      console.log(res);
+      EvaluateOrderSum();
     }; 
   });
+
+  // Активация поля "дисконт" по галочке
+  form.addEventListener('click', e => {
+    if (e.target.closest('.modal__checkbox')) {
+      if (form.discount.checked) {
+        form.discount_count.disabled = false;
+      } else {
+        form.discount_count.value = '';
+        form.discount_count.disabled = true;
+      }
+    }
+  })
+
 };
 
 renderGoods(goodsArray);
+EvaluateOrderSum();
 actions(overlay);
+addItem(modal, overlay);
+
